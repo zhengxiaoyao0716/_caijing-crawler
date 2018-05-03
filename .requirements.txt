@@ -1,0 +1,8 @@
+requests
+BeautifulSoup4
+lxml
+
+# development
+ipython
+pylint
+autopep8
