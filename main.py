@@ -78,7 +78,7 @@ config = namedtuple('Config', (
         ),
     },
     'utf-8',
-    ('关', '键', '词'),
+    ('文化', '创意', '产业'),
     'output.txt',
 )
 
