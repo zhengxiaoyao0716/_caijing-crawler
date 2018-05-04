@@ -15,7 +15,8 @@ from bs4 import BeautifulSoup
 
 def pick(item: BeautifulSoup, selector: str):
     """摘取指定文本"""
-    return item.select_one(selector).text.strip()
+    field = item.select_one(selector)
+    return field.text.strip() if field else ''
 
 
 def parse_caijing(resp: requests.Response):
@@ -31,10 +32,27 @@ def parse_caijing(resp: requests.Response):
     } for item in items)
 
 
+def parse_jingji(resp: requests.Response):
+    """中国经济网解析页面数据"""
+    resp.encoding = 'utf-8'  # 设置响应编码
+    soup = BeautifulSoup(resp.text, 'lxml')  # 读取页面内容
+    items = soup.select_one('div.neirong').select('table')[1] \
+        .select_one('td').select('td')
+
+    return ({
+        'title': pick(item, 'a'),
+        'date': pick(item, 'span.rq1'),
+    } for item in items)
+
+
 def parse_sina(resp: requests.Response):
     """解析新浪财经数据"""
-    # TODO 交给学姐自己弄咯
-    pass
+    items = json.loads(resp.text)
+    return ({
+        'title': item['title'],
+        'subtitle': item['intro'],
+    } for item in items['result']['data'])
+
 
 
 # 配置
@@ -92,9 +110,9 @@ def export(data: list):
 
     text = '\n\n'.join(
         '\n'.join((
-            'Title: ' + analyze(item['title']),
-            'Date: ' + item['date'],
-            'Subtitle: ' + analyze(item['subtitle']),
+            'Title: ' + analyze(item.get('title', '')),
+            'Date: ' + item.get('date', ''),
+            'Subtitle: ' + analyze(item.get('subtitle', '')),
         )) for item in data
     ) + '\n'
 
