@@ -31,6 +31,12 @@ def parse_caijing(resp: requests.Response):
     } for item in items)
 
 
+def parse_sina(resp: requests.Response):
+    """解析新浪财经数据"""
+    # TODO 交给学姐自己弄咯
+    pass
+
+
 # 配置
 config = namedtuple('Config', (
     'pages',  # 待爬取页面
@@ -42,9 +48,13 @@ config = namedtuple('Config', (
         parse_caijing: (
             'http://www.caijing.com.cn/dailynews/index.html',
             *('http://www.caijing.com.cn/dailynews/index-%d.html' % (6199 - index)
-              for index in range(10))
+              for index in range(10)),
         ),
-        'xxx': (
+        parse_sina: (
+            'http://feed.mix.sina.com.cn/api/roll/get?'
+            'pageid=155&lid=%d&num=10&page=%d' % (lid, page)
+            for lid in (1686, 1687, 1690, 1688, 1689)
+            for page in range(10)
         ),
         'yyy': (
         ),
