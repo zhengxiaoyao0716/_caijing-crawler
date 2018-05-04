@@ -112,7 +112,7 @@ def export(name: str, data: list):
         '\n'.join((
             'Title: ' + analyze(item.get('title', '')),
             'Subtitle: ' + analyze(item.get('subtitle', '')),
-            'Content: ' + analyze(item.get('Content', '')),
+            'Content: ' + analyze(item.get('content', '')),
             'Date: ' + item.get('date', ''),
         )) for item in data
     ) + '\n'
