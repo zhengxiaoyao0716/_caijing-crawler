@@ -27,8 +27,8 @@ def parse_caijing(resp: requests.Response):
 
     return ({
         'title': pick(item, 'div.wzbt'),
-        'date': pick(item, 'div.time'),
         'subtitle': pick(item, 'div.subtitle'),
+        'date': pick(item, 'div.time'),
     } for item in items)
 
 
@@ -97,7 +97,7 @@ def fetch(parse, url: str):
     return data
 
 
-def export(data: list):
+def export(name: str, data: list):
     """导出数据"""
     counter = {}
 
@@ -111,29 +111,47 @@ def export(data: list):
     text = '\n\n'.join(
         '\n'.join((
             'Title: ' + analyze(item.get('title', '')),
-            'Date: ' + item.get('date', ''),
             'Subtitle: ' + analyze(item.get('subtitle', '')),
+            'Content: ' + analyze(item.get('Content', '')),
+            'Date: ' + item.get('date', ''),
         )) for item in data
     ) + '\n'
 
-    report = '关键词统计：\n' + \
+    report = '关键词统计 [%s]:\n' % name + \
         '\n'.join(('%s: %d 次' % (kw, counter[kw]) for kw in counter)) + \
-        '\n总计: %d 次' % sum((counter[kw] for kw in counter))
-    text = report + '\n\n' + text
-    # 写入文件
-    with open(config.output, 'w', encoding='utf-8') as file:
-        file.write(text)
-    print('共 %d 条数据抓取完成，数据已导出到 `%s`.' % (len(data), config.output))
-    print(report)
+        '\n总计: %d 次\n' % sum((counter[kw] for kw in counter))
+
+    return counter, report, text
 
 
 def main():
     """Entrypoint"""
-    data = [item
-            for parse in config.pages
-            for url in config.pages[parse]
-            for item in fetch(parse, url)]
-    data and export(data)  # pylint: disable=W0106
+    num = 0
+    counter = {}
+    report = ''
+    output = ''
+    for parse in config.pages:
+        data = [item
+                for url in config.pages[parse]
+                for item in fetch(parse, url)]
+        if not data:
+            continue
+        num += len(data)
+        ct, rp, op = export(parse.__name__[6:], data)
+        for kw in ct:
+            counter[kw] = ct[kw] + counter.get(kw, 0)
+        report += rp + '\n'
+        output += op + '\n'
+
+    report = report + '\n关键词统计 [合计]:\n' + \
+        '\n'.join(('%s: %d 次' % (kw, counter[kw]) for kw in counter)) + \
+        '\n总计: %d 次' % sum((counter[kw] for kw in counter))
+    print(report)
+
+    # 写入文件
+    with open(config.output, 'w', encoding='utf-8') as file:
+        file.write(report + '\n\n' + output)
+    print('\n共 %d 条数据抓取完成，数据已导出到 `%s`.' % (num, config.output))
 
 
 if __name__ == '__main__':
